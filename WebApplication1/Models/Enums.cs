@@ -32,3 +32,9 @@ public enum BookingStatus
     Cancelled,
     Completed
 }
+public enum DocumentStatus
+{
+    Pending,
+    Verified,
+    Rejected
+}

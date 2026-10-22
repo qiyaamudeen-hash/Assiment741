@@ -37,6 +37,8 @@ public class Booking
 
     [StringLength(500)]
     public string? HostNotes { get; set; }            // used by the Host in 4C
+    public DateTime? RulesAcceptedAt { get; set; }
+    public List<GuestDocument> Documents { get; set; } = new();
 
     // Calculated, not stored (no setter, so EF ignores it)
     public int Nights => CheckOutDate.DayNumber - CheckInDate.DayNumber;

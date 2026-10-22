@@ -303,6 +303,9 @@ namespace WebApplication1.Migrations
                     b.Property<int>("PropertyId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("RulesAcceptedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal>("ServiceFee")
                         .HasColumnType("decimal(18,2)");
 
@@ -359,6 +362,49 @@ namespace WebApplication1.Migrations
                         .IsUnique();
 
                     b.ToTable("CheckInProcesses");
+                });
+
+            modelBuilder.Entity("WebApplication1.Models.GuestDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BookingId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DocumentType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StoredFileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
+
+                    b.ToTable("GuestDocuments");
                 });
 
             modelBuilder.Entity("WebApplication1.Models.HostApplication", b =>
@@ -556,6 +602,17 @@ namespace WebApplication1.Migrations
                     b.Navigation("Property");
                 });
 
+            modelBuilder.Entity("WebApplication1.Models.GuestDocument", b =>
+                {
+                    b.HasOne("WebApplication1.Models.Booking", "Booking")
+                        .WithMany("Documents")
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Booking");
+                });
+
             modelBuilder.Entity("WebApplication1.Models.HostApplication", b =>
                 {
                     b.HasOne("WebApplication1.Models.ApplicationUser", "Applicant")
@@ -595,6 +652,11 @@ namespace WebApplication1.Migrations
                         .IsRequired();
 
                     b.Navigation("Property");
+                });
+
+            modelBuilder.Entity("WebApplication1.Models.Booking", b =>
+                {
+                    b.Navigation("Documents");
                 });
 
             modelBuilder.Entity("WebApplication1.Models.HostProperty", b =>

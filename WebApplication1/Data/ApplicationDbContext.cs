@@ -15,6 +15,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<HostApplication> HostApplications => Set<HostApplication>();
     public DbSet<CheckInProcess> CheckInProcesses => Set<CheckInProcess>();
     public DbSet<Booking> Bookings => Set<Booking>();
+    public DbSet<GuestDocument> GuestDocuments => Set<GuestDocument>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
