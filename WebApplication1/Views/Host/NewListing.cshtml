@@ -1,0 +1,71 @@
+﻿@model WebApplication1.ViewModels.BecomeHostViewModel
+@{
+    ViewData["Title"] = "Add a Property";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <h2 class="mb-1">Add another property</h2>
+        <p class="text-muted">Tell us about your property. An admin will review your application.</p>
+
+        <form asp-controller="Host" asp-action="NewListing" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="City" class="form-label"></label>
+                    <input asp-for="City" class="form-control" />
+                    <span asp-validation-for="City" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="PropertyType" class="form-label"></label>
+                    <select asp-for="PropertyType" asp-items="Html.GetEnumSelectList<PropertyType>()" class="form-select"></select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Address" class="form-label"></label>
+                <input asp-for="Address" class="form-control" />
+                <span asp-validation-for="Address" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="PricePerNight" class="form-label"></label>
+                    <input asp-for="PricePerNight" class="form-control" />
+                    <span asp-validation-for="PricePerNight" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="CleaningFee" class="form-label"></label>
+                    <input asp-for="CleaningFee" class="form-control" />
+                    <span asp-validation-for="CleaningFee" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Images" class="form-label"></label>
+                <input asp-for="Images" type="file" multiple accept=".jpg,.jpeg,.png,.webp" class="form-control" required />
+                <div class="form-text">At least one photo is required (JPG, PNG or WEBP, max 5 MB each).</div>
+                <span asp-validation-for="Images" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Submit application</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

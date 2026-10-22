@@ -1,0 +1,83 @@
+﻿@model WebApplication1.Models.HostApplication
+@{
+    ViewData["Title"] = "Review Application";
+    var p = Model.Property!;
+}
+
+<a asp-action="Index">&larr; Back to dashboard</a>
+<h2 class="mt-2">Application #@Model.Id</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="row">
+    <div class="col-md-7">
+        <h4>@p.Title</h4>
+        <p>@p.Description</p>
+        <dl class="row">
+            <dt class="col-sm-4">Type</dt>
+            <dd class="col-sm-8">@p.PropertyType</dd>
+            <dt class="col-sm-4">City</dt>
+            <dd class="col-sm-8">@p.City</dd>
+            <dt class="col-sm-4">Address</dt>
+            <dd class="col-sm-8">@p.Address</dd>
+            <dt class="col-sm-4">Price per night</dt>
+            <dd class="col-sm-8">@p.PricePerNight.ToString("N2")</dd>
+            <dt class="col-sm-4">Cleaning fee</dt>
+            <dd class="col-sm-8">@p.CleaningFee.ToString("N2")</dd>
+        </dl>
+
+        <h5>Photos</h5>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            @foreach (var img in p.Images)
+            {
+                <a href="@img.ImageUrl" target="_blank">
+                    <img src="@img.ImageUrl" alt="" class="img-thumbnail" style="height:160px;" />
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>Applicant</h5>
+                <p class="mb-1">@Model.Applicant?.FirstName @Model.Applicant?.LastName</p>
+                <p class="mb-1 text-muted">@Model.Applicant?.Email</p>
+                <p class="mb-0 text-muted">Submitted @Model.SubmittedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+            </div>
+        </div>
+
+        @if (Model.Status == ApplicationStatus.Pending)
+        {
+            <form asp-action="Approve" asp-route-id="@Model.Id" method="post" class="mb-3">
+                <button type="submit" class="btn btn-success w-100">Approve and make a Host</button>
+            </form>
+
+            <form asp-action="Reject" asp-route-id="@Model.Id" method="post">
+                <div class="mb-2">
+                    <label for="notes" class="form-label">Reason for rejection</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="3" maxlength="500"></textarea>
+                </div>
+                <button type="submit" class="btn btn-outline-danger w-100">Reject</button>
+            </form>
+        }
+        else
+        {
+            <div class="alert alert-secondary">
+                This application was <strong>@Model.Status</strong>
+                @if (Model.ReviewedAt != null)
+                {
+                    <text>on @Model.ReviewedAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</text>
+                }
+    .
+                @if (!string.IsNullOrEmpty(Model.AdminNotes))
+                {
+                    <div class="mt-2">Notes: @Model.AdminNotes</div>
+                }
+            </div>
+        }
+    </div>
+</div>

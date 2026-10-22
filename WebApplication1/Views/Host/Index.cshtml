@@ -1,0 +1,90 @@
+﻿@model List<WebApplication1.ViewModels.HostPropertyRow>
+@{
+    ViewData["Title"] = "Host Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Host Dashboard</h2>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" asp-action="Bookings">
+            Booking requests
+            @if ((int)ViewBag.PendingBookings > 0)
+            {
+                <span class="badge bg-danger">@ViewBag.PendingBookings</span>
+            }
+        </a>
+        <a class="btn btn-primary" asp-action="NewListing">Add another property</a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (!Model.Any())
+{
+    <p class="text-muted">You don't have any listings yet.</p>
+}
+
+@foreach (var row in Model)
+{
+    var property = row.Property;
+    <div class="card mb-3">
+        <div class="card-body d-flex gap-3">
+            @if (property.Images.Any())
+            {
+                <img src="@property.Images.First().ImageUrl" alt="" style="width:160px;height:110px;object-fit:cover;" class="rounded" />
+            }
+            <div class="flex-grow-1">
+                <h5 class="mb-1">@property.Title</h5>
+                <p class="mb-2 text-muted">
+                    @property.City &middot; @property.PropertyType &middot; @property.PricePerNight.ToString("N2") per night
+                </p>
+
+                @if (row.ApprovalStatus == ApplicationStatus.Pending)
+                {
+                    <span class="badge bg-warning text-dark">Awaiting admin approval</span>
+                }
+                else if (row.ApprovalStatus == ApplicationStatus.Rejected)
+                {
+                    <span class="badge bg-danger">Rejected</span>
+                    @if (!string.IsNullOrEmpty(row.AdminNotes))
+                    {
+                        <div class="small mt-1"><strong>Admin notes:</strong> @row.AdminNotes</div>
+                    }
+                }
+                else
+                {
+                    <span class="badge @(property.IsActive ? "bg-success" : "bg-secondary")">
+                        @(property.IsActive ? "Active" : "Inactive")
+                    </span>
+                    @if (!row.HasCheckIn)
+                    {
+                        <div class="small text-muted mt-1">Check-in settings not set up yet</div>
+                    }
+                }
+            </div>
+
+            <div class="d-flex flex-column gap-2">
+                @if (row.ApprovalStatus != ApplicationStatus.Rejected)
+                {
+                    <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@property.Id">Edit</a>
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="CheckIn" asp-route-id="@property.Id">Check-in settings</a>
+                }
+                @if (row.ApprovalStatus == ApplicationStatus.Approved)
+                {
+                    <form asp-action="ToggleActive" asp-route-id="@property.Id" method="post">
+                        <button type="submit" class="btn btn-sm @(property.IsActive ? "btn-outline-secondary" : "btn-success")">
+                            @(property.IsActive ? "Deactivate" : "Activate")
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+}

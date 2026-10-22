@@ -1,0 +1,60 @@
+﻿@model WebApplication1.ViewModels.ActivityLogViewModel
+@{
+    ViewData["Title"] = "Activity Log";
+}
+
+<h2 class="mb-3">Activity Log</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <select name="filter" class="form-select" onchange="this.form.submit()">
+            <option value="">All actions</option>
+            @foreach (var a in Model.AvailableActions)
+            {
+                <option value="@a" selected="@(a == Model.Filter)">@a</option>
+            }
+        </select>
+    </div>
+</form>
+
+<table class="table table-sm align-middle">
+    <thead>
+        <tr>
+            <th>When</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Details</th>
+            <th>IP</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in Model.Rows)
+        {
+            <tr>
+                <td class="text-nowrap">@row.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm:ss")</td>
+                <td>@row.User</td>
+                <td><span class="badge bg-secondary">@row.Action</span></td>
+                <td>@row.Details</td>
+                <td class="text-muted">@row.IpAddress</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<nav class="d-flex justify-content-between align-items-center">
+    <div>
+        @if (Model.Page > 1)
+        {
+            <a class="btn btn-outline-secondary btn-sm" asp-action="ActivityLog"
+               asp-route-filter="@Model.Filter" asp-route-page="@(Model.Page - 1)">&larr; Newer</a>
+        }
+    </div>
+    <span class="text-muted">Page @Model.Page of @Model.TotalPages</span>
+    <div>
+        @if (Model.Page < Model.TotalPages)
+        {
+            <a class="btn btn-outline-secondary btn-sm" asp-action="ActivityLog"
+               asp-route-filter="@Model.Filter" asp-route-page="@(Model.Page + 1)">Older &rarr;</a>
+        }
+    </div>
+</nav>

@@ -1,0 +1,122 @@
+﻿@model List<WebApplication1.Models.Booking>
+@{
+    ViewData["Title"] = "Booking Requests";
+
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var pending = Model.Where(b => b.Status == BookingStatus.Pending).OrderBy(b => b.CheckInDate).ToList();
+    var upcoming = Model.Where(b => b.Status == BookingStatus.Approved && b.CheckOutDate >= today).OrderBy(b => b.CheckInDate).ToList();
+    var history = Model.Where(b => !pending.Contains(b) && !upcoming.Contains(b)).OrderByDescending(b => b.CheckInDate).ToList();
+
+    string Badge(BookingStatus s) => s switch
+    {
+        BookingStatus.Approved => "bg-success",
+        BookingStatus.Rejected => "bg-danger",
+        BookingStatus.Cancelled => "bg-secondary",
+        BookingStatus.Completed => "bg-info text-dark",
+        _ => "bg-warning text-dark"
+    };
+}
+
+<a asp-action="Index">&larr; Back to dashboard</a>
+<h2 class="mt-2 mb-3">Booking requests</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<h4>Waiting for your response (@pending.Count)</h4>
+@if (!pending.Any())
+{
+    <p class="text-muted">No pending requests.</p>
+}
+@foreach (var b in pending)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-1">@b.Property?.Title</h5>
+                    <p class="mb-1">Guest: <strong>@b.Guest?.FirstName @b.Guest?.LastName</strong></p>
+                    <p class="mb-1 text-muted">
+                        @b.CheckInDate.ToString("dd MMM yyyy") &rarr; @b.CheckOutDate.ToString("dd MMM yyyy")
+                        &middot; @b.Nights night@(b.Nights == 1 ? "" : "s")
+                        &middot; @b.NumberOfGuests traveller@(b.NumberOfGuests == 1 ? "" : "s")
+                    </p>
+                    <p class="mb-0">
+                        Total <strong>@b.TotalPrice.ToString("N2")</strong>
+                        <small class="text-muted">(requested @b.CreatedAt.ToLocalTime().ToString("dd MMM HH:mm"))</small>
+                    </p>
+                </div>
+                <div class="col-md-3">
+                    <form asp-action="ApproveBooking" asp-route-id="@b.Id" method="post">
+                        <input name="notes" class="form-control form-control-sm mb-1" maxlength="500" placeholder="Optional message to guest" />
+                        <button type="submit" class="btn btn-sm btn-success w-100">Approve</button>
+                    </form>
+                </div>
+                <div class="col-md-3">
+                    <form asp-action="RejectBooking" asp-route-id="@b.Id" method="post">
+                        <input name="notes" class="form-control form-control-sm mb-1" maxlength="500" placeholder="Reason (required)" required />
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">Decline</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<h4 class="mt-4">Upcoming stays (@upcoming.Count)</h4>
+@if (!upcoming.Any())
+{
+    <p class="text-muted">No approved stays coming up.</p>
+}
+else
+{
+    <table class="table align-middle">
+        <thead>
+            <tr><th>Property</th><th>Guest</th><th>Dates</th><th>Travellers</th><th>Total</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var b in upcoming)
+            {
+                <tr>
+                    <td>@b.Property?.Title</td>
+                    <td>@b.Guest?.FirstName @b.Guest?.LastName</td>
+                    <td>@b.CheckInDate.ToString("dd MMM") &rarr; @b.CheckOutDate.ToString("dd MMM yyyy")</td>
+                    <td>@b.NumberOfGuests</td>
+                    <td>@b.TotalPrice.ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<h4 class="mt-4">History</h4>
+@if (!history.Any())
+{
+    <p class="text-muted">Nothing here yet.</p>
+}
+else
+{
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr><th>Property</th><th>Guest</th><th>Dates</th><th>Status</th><th>Note</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var b in history)
+            {
+                <tr>
+                    <td>@b.Property?.Title</td>
+                    <td>@b.Guest?.FirstName @b.Guest?.LastName</td>
+                    <td>@b.CheckInDate.ToString("dd MMM") &rarr; @b.CheckOutDate.ToString("dd MMM yyyy")</td>
+                    <td><span class="badge @Badge(b.Status)">@b.Status</span></td>
+                    <td>@b.HostNotes</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,86 @@
+﻿@model WebApplication1.ViewModels.UserManagementViewModel
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<h2 class="mb-3">User Management</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-md-6">
+        <input name="search" value="@Model.Search" class="form-control" placeholder="Search by name or email" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Search</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+    </div>
+</form>
+
+<h4>Guests</h4>
+@if (!Model.Guests.Any())
+{
+    <p class="text-muted">No guests found.</p>
+}
+else
+{
+    <table class="table align-middle mb-4">
+        <thead>
+            <tr><th>Name</th><th>Email</th><th>Joined</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var guest in Model.Guests)
+            {
+                <tr>
+                    <td>@guest.FirstName @guest.LastName</td>
+                    <td>@guest.Email</td>
+                    <td>@guest.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
+                    <td class="text-end">
+                        <form asp-action="PromoteToAdmin" asp-route-id="@guest.Id" method="post"
+                              onsubmit="return confirm('Promote this user to Admin?');">
+                            <button type="submit" class="btn btn-sm btn-primary">Promote to Admin</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p class="text-muted small">Showing up to 50 results. Use the search box to narrow the list.</p>
+}
+
+<h4 class="mt-4">Current Admins</h4>
+@if (!Model.Admins.Any())
+{
+    <p class="text-muted">No admins besides the SuperAdmin.</p>
+}
+else
+{
+    <table class="table align-middle">
+        <thead>
+            <tr><th>Name</th><th>Email</th><th>Joined</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var admin in Model.Admins)
+            {
+                <tr>
+                    <td>@admin.FirstName @admin.LastName</td>
+                    <td>@admin.Email</td>
+                    <td>@admin.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
+                    <td class="text-end">
+                        <form asp-action="DemoteToGuest" asp-route-id="@admin.Id" method="post"
+                              onsubmit="return confirm('Demote this admin back to Guest?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Demote to Guest</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,91 @@
+﻿@model WebApplication1.Models.Booking
+@{
+    var p = Model.Property!;
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    ViewData["Title"] = "Booking #" + Model.Id;
+
+    var badge = Model.Status switch
+    {
+        BookingStatus.Approved => "bg-success",
+        BookingStatus.Rejected => "bg-danger",
+        BookingStatus.Cancelled => "bg-secondary",
+        BookingStatus.Completed => "bg-info text-dark",
+        _ => "bg-warning text-dark"
+    };
+}
+
+<a asp-action="Index">&larr; Back to my bookings</a>
+<h2 class="mt-2 mb-3">Booking #@Model.Id</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>
+                    <a asp-controller="Properties" asp-action="Details" asp-route-id="@p.Id">@p.Title</a>
+                    <span class="badge @badge ms-2">@Model.Status</span>
+                </h5>
+                <p class="text-muted mb-2">@p.City &middot; @p.PropertyType</p>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Check-in</dt>
+                    <dd class="col-sm-8">@Model.CheckInDate.ToString("dddd, dd MMM yyyy")</dd>
+                    <dt class="col-sm-4">Check-out</dt>
+                    <dd class="col-sm-8">@Model.CheckOutDate.ToString("dddd, dd MMM yyyy")</dd>
+                    <dt class="col-sm-4">Travellers</dt>
+                    <dd class="col-sm-8">@Model.NumberOfGuests</dd>
+                    <dt class="col-sm-4">Requested</dt>
+                    <dd class="col-sm-8">@Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</dd>
+                    @if (Model.Status == BookingStatus.Approved)
+                    {
+                        <dt class="col-sm-4">Address</dt>
+                        <dd class="col-sm-8">@p.Address</dd>
+                    }
+                </dl>
+
+                @if (!string.IsNullOrEmpty(Model.HostNotes))
+                {
+                    <p class="mt-3 mb-0"><strong>Note from the host:</strong> @Model.HostNotes</p>
+                }
+            </div>
+        </div>
+
+        @if (Model.Status == BookingStatus.Pending)
+        {
+            <div class="alert alert-info">Waiting for the host to respond to your request.</div>
+        }
+        else if (Model.Status == BookingStatus.Approved)
+        {
+            <div class="alert alert-success">Your booking is confirmed. The check-in steps will appear here in a later step.</div>
+        }
+    </div>
+
+    <div class="col-md-5">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>Price</h5>
+                <div class="d-flex justify-content-between"><span>@Model.NightlyRate.ToString("N2") x @Model.Nights night@(Model.Nights == 1 ? "" : "s")</span><span>@((Model.NightlyRate * Model.Nights).ToString("N2"))</span></div>
+                <div class="d-flex justify-content-between"><span>Cleaning fee</span><span>@Model.CleaningFee.ToString("N2")</span></div>
+                <div class="d-flex justify-content-between"><span>Service fee</span><span>@Model.ServiceFee.ToString("N2")</span></div>
+                <div class="d-flex justify-content-between fw-bold border-top pt-1 mt-1"><span>Total</span><span>@Model.TotalPrice.ToString("N2")</span></div>
+            </div>
+        </div>
+
+        @if ((Model.Status == BookingStatus.Pending || Model.Status == BookingStatus.Approved) && Model.CheckInDate > today)
+        {
+            <form asp-action="Cancel" asp-route-id="@Model.Id" method="post"
+                  onsubmit="return confirm('Cancel this booking?');">
+                <button type="submit" class="btn btn-outline-danger w-100">Cancel booking</button>
+            </form>
+        }
+    </div>
+</div>

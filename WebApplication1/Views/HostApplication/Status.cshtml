@@ -1,0 +1,53 @@
+﻿@model List<WebApplication1.Models.HostApplication>
+@{
+    ViewData["Title"] = "My Host Applications";
+}
+
+<h2 class="mb-3">My Host Applications</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+@if (!Model.Any())
+{
+    <p>You haven't applied yet.</p>
+    <a class="btn btn-primary" asp-action="Apply">Become a Host</a>
+}
+else
+{
+    foreach (var app in Model)
+    {
+        var badge = app.Status switch
+        {
+            ApplicationStatus.Approved => "bg-success",
+            ApplicationStatus.Rejected => "bg-danger",
+            _ => "bg-warning text-dark"
+        };
+
+        <div class="card mb-3">
+            <div class="card-body d-flex gap-3">
+                @if (app.Property?.Images.Any() == true)
+                {
+                    <img src="@app.Property.Images.First().ImageUrl" alt="" style="width:140px;height:100px;object-fit:cover;" class="rounded" />
+                }
+                <div>
+                    <h5 class="mb-1">@app.Property?.Title</h5>
+                    <p class="mb-1 text-muted">@app.Property?.City &middot; @app.Property?.PropertyType &middot; @app.Property?.PricePerNight.ToString("N2") per night</p>
+                    <span class="badge @badge">@app.Status</span>
+                    <small class="text-muted ms-2">Submitted @app.SubmittedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</small>
+                    @if (!string.IsNullOrEmpty(app.AdminNotes))
+                    {
+                        <p class="mt-2 mb-0"><strong>Admin notes:</strong> @app.AdminNotes</p>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!Model.Any(a => a.Status == ApplicationStatus.Pending))
+    {
+        <a class="btn btn-outline-primary" asp-action="Apply">Submit a new application</a>
+    }
+}

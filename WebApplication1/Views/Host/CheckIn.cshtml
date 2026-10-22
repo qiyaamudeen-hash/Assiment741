@@ -1,0 +1,69 @@
+﻿@model WebApplication1.ViewModels.CheckInProcessViewModel
+@{
+    ViewData["Title"] = "Check-in Settings";
+}
+
+<a asp-action="Index">&larr; Back to dashboard</a>
+<h2 class="mt-2 mb-1">Check-in settings</h2>
+<p class="text-muted">For <strong>@Model.PropertyTitle</strong>. Guests with an approved booking will complete these steps before arrival.</p>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<div class="row">
+    <div class="col-md-7">
+        <form asp-action="CheckIn" asp-route-id="@Model.PropertyId" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="CheckInTime" class="form-label"></label>
+                    <input asp-for="CheckInTime" type="time" class="form-control" />
+                    <span asp-validation-for="CheckInTime" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="CheckOutTime" class="form-label"></label>
+                    <input asp-for="CheckOutTime" type="time" class="form-control" />
+                    <span asp-validation-for="CheckOutTime" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="HouseRules" class="form-label"></label>
+                <textarea asp-for="HouseRules" class="form-control" rows="5"
+                          placeholder="e.g. No smoking indoors. Quiet hours after 22:00. No parties or events."></textarea>
+                <span asp-validation-for="HouseRules" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="CheckInInstructions" class="form-label"></label>
+                <textarea asp-for="CheckInInstructions" class="form-control" rows="4"
+                          placeholder="e.g. The key is in the lockbox by the front gate. Code is shared after your documents are verified."></textarea>
+                <div class="form-text">Private: guests only see this once you've verified their documents.</div>
+                <span asp-validation-for="CheckInInstructions" class="text-danger"></span>
+            </div>
+
+            <h5 class="mt-4">Required documents</h5>
+            <div class="form-check mb-1">
+                <input class="form-check-input" type="checkbox" checked disabled />
+                <label class="form-check-label">Government ID or Passport <span class="text-muted">(always required)</span></label>
+            </div>
+            <div class="form-check mb-1">
+                <input asp-for="RequireProofOfAddress" class="form-check-input" />
+                <label asp-for="RequireProofOfAddress" class="form-check-label"></label>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="RequireDriversLicense" class="form-check-input" />
+                <label asp-for="RequireDriversLicense" class="form-check-label"></label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save check-in settings</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,201 @@
+﻿@model WebApplication1.ViewModels.PropertyDetailsViewModel
+@{
+    var p = Model.Property;
+    var images = p.Images.OrderBy(i => i.Id).ToList();
+    ViewData["Title"] = p.Title;
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+<a asp-action="Index">&larr; Back to all stays</a>
+
+@if (Model.IsPreview)
+{
+    <div class="alert alert-warning mt-2">Preview: this listing is hidden and guests can't see it yet.</div>
+}
+@if (TempData["BookingError"] != null)
+{
+    <div class="alert alert-danger mt-2">@TempData["BookingError"]</div>
+}
+
+<h2 class="mt-2 mb-0">@p.Title</h2>
+<p class="text-muted">@p.City &middot; @p.PropertyType</p>
+
+@if (images.Any())
+{
+    <div id="gallery" class="carousel slide mb-4" data-bs-ride="false">
+        @if (images.Count > 1)
+        {
+            <div class="carousel-indicators">
+                @for (var i = 0; i < images.Count; i++)
+                {
+                    <button type="button" data-bs-target="#gallery" data-bs-slide-to="@i"
+                            class="@(i == 0 ? "active" : "")" aria-label="Photo @(i + 1)"></button>
+                }
+            </div>
+        }
+        <div class="carousel-inner rounded">
+            @for (var i = 0; i < images.Count; i++)
+            {
+                <div class="carousel-item @(i == 0 ? "active" : "")">
+                    <img src="@images[i].ImageUrl" class="d-block w-100" alt="@p.Title photo @(i + 1)"
+                         style="max-height:480px;object-fit:cover;" />
+                </div>
+            }
+        </div>
+        @if (images.Count > 1)
+        {
+            <button class="carousel-control-prev" type="button" data-bs-target="#gallery" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#gallery" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        }
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <p class="text-muted">Hosted by @Model.HostName</p>
+        <p style="white-space:pre-line">@p.Description</p>
+        <p class="text-muted small">The exact address is shared once your booking is confirmed.</p>
+
+        <hr />
+        <h5>Check-in &amp; house rules</h5>
+        @if (Model.CheckIn != null)
+        {
+            <p class="mb-1">Check-in from <strong>@Model.CheckIn.CheckInTime.ToString("HH:mm")</strong>, check-out by <strong>@Model.CheckIn.CheckOutTime.ToString("HH:mm")</strong></p>
+            <p style="white-space:pre-line">@Model.CheckIn.HouseRules</p>
+
+            <h6>Documents you'll need before arrival</h6>
+            <ul>
+                @if (Model.CheckIn.RequiredDocuments.HasFlag(RequiredDocument.IdOrPassport))
+                {
+                    <li>Government ID or Passport</li>
+                }
+                @if (Model.CheckIn.RequiredDocuments.HasFlag(RequiredDocument.ProofOfAddress))
+                {
+                    <li>Proof of address</li>
+                }
+                @if (Model.CheckIn.RequiredDocuments.HasFlag(RequiredDocument.DriversLicense))
+                {
+                    <li>Driver's licence</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-muted">You'll be asked for a Government ID or Passport before arrival.</p>
+        }
+        @* CheckInInstructions are private and are deliberately never shown on this page. *@
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm sticky-top" style="top:1rem;">
+            <div class="card-body">
+                <h4 class="mb-0">@p.PricePerNight.ToString("N2") <small class="text-muted fs-6">/ night</small></h4>
+                @if (p.CleaningFee > 0)
+                {
+                    <p class="text-muted small mb-3">+ @p.CleaningFee.ToString("N2") cleaning fee</p>
+                }
+
+                @if (User.IsInRole(Roles.Guest))
+                {
+                    <form asp-controller="Bookings" asp-action="Create" method="post">
+                        <input type="hidden" name="propertyId" value="@p.Id" />
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label for="checkIn" class="form-label small mb-0">Check-in</label>
+                                <input type="date" id="checkIn" name="checkIn" class="form-control"
+                                       min="@today" value="@Model.ChosenCheckIn" required />
+                            </div>
+                            <div class="col-6">
+                                <label for="checkOut" class="form-label small mb-0">Check-out</label>
+                                <input type="date" id="checkOut" name="checkOut" class="form-control"
+                                       min="@today" value="@Model.ChosenCheckOut" required />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="travelers" class="form-label small mb-0">Travellers</label>
+                            <input type="number" id="travelers" name="travelers" class="form-control"
+                                   min="1" max="16" value="@Model.ChosenTravelers" required />
+                        </div>
+
+                        <div id="quote" class="small mb-3"></div>
+
+                        <button type="submit" class="btn btn-primary w-100">Request to book</button>
+                        <p class="text-muted small text-center mt-2 mb-0">You won't be charged yet. The host reviews your request first.</p>
+                    </form>
+                }
+                else if (User.Identity?.IsAuthenticated != true)
+                {
+                    <a class="btn btn-primary w-100 mb-2" asp-controller="Account" asp-action="Login"
+                       asp-route-returnUrl="@Context.Request.Path">Log in to book</a>
+                    <a class="btn btn-outline-secondary w-100" asp-controller="Account" asp-action="Register">Create an account</a>
+                }
+                else
+                {
+                    <p class="small text-muted mb-0">Only guest accounts can make bookings.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        (function () {
+            const checkIn = document.getElementById('checkIn');
+            const checkOut = document.getElementById('checkOut');
+            const box = document.getElementById('quote');
+            if (!checkIn || !checkOut || !box) return;   // only Guests see the booking form
+
+            const money = n => Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            function addRow(label, value, bold) {
+                const row = document.createElement('div');
+                row.className = 'd-flex justify-content-between' + (bold ? ' fw-bold border-top pt-1 mt-1' : '');
+                const l = document.createElement('span'); l.textContent = label;
+                const v = document.createElement('span'); v.textContent = value;
+                row.append(l, v);
+                box.appendChild(row);
+            }
+
+            async function updateQuote() {
+                box.replaceChildren();
+                if (!checkIn.value || !checkOut.value) return;
+
+                const url = `/Bookings/Quote?propertyId=@p.Id&checkIn=${checkIn.value}&checkOut=${checkOut.value}`;
+                try {
+                    const res = await fetch(url);
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        const msg = document.createElement('span');
+                        msg.className = 'text-danger';
+                        msg.textContent = data.error || 'Could not calculate the price.';
+                        box.appendChild(msg);
+                        return;
+                    }
+
+                    addRow(`${money(data.nightlyRate)} x ${data.nights} night${data.nights === 1 ? '' : 's'}`, money(data.subtotal));
+                    addRow('Cleaning fee', money(data.cleaningFee));
+                    addRow('Service fee', money(data.serviceFee));
+                    addRow('Total', money(data.total), true);
+                } catch {
+                    box.textContent = 'Could not calculate the price.';
+                }
+            }
+
+            checkIn.addEventListener('change', function () {
+                checkOut.min = checkIn.value || checkOut.min;   // check-out can't be before check-in
+                updateQuote();
+            });
+            checkOut.addEventListener('change', updateQuote);
+            updateQuote();   // handles the pre-filled case after a validation error
+        })();
+    </script>
+}

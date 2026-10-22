@@ -1,0 +1,46 @@
+﻿@model List<WebApplication1.Models.Booking>
+@{
+    ViewData["Title"] = "My Bookings";
+}
+
+<h2 class="mb-3">My Bookings</h2>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">You haven't booked anything yet.</p>
+    <a class="btn btn-primary" asp-controller="Properties" asp-action="Index">Explore stays</a>
+}
+
+@foreach (var b in Model)
+{
+    var badge = b.Status switch
+    {
+        BookingStatus.Approved => "bg-success",
+        BookingStatus.Rejected => "bg-danger",
+        BookingStatus.Cancelled => "bg-secondary",
+        BookingStatus.Completed => "bg-info text-dark",
+        _ => "bg-warning text-dark"
+    };
+
+    <div class="card mb-3">
+        <div class="card-body d-flex gap-3">
+            @if (b.Property?.Images.Any() == true)
+            {
+                <img src="@b.Property.Images.OrderBy(i => i.Id).First().ImageUrl" alt="" style="width:140px;height:100px;object-fit:cover;" class="rounded" />
+            }
+            <div class="flex-grow-1">
+                <h5 class="mb-1">@b.Property?.Title</h5>
+                <p class="mb-1 text-muted">
+                    @b.CheckInDate.ToString("dd MMM yyyy") &rarr; @b.CheckOutDate.ToString("dd MMM yyyy")
+                    &middot; @b.Nights night@(b.Nights == 1 ? "" : "s")
+                    &middot; @b.NumberOfGuests traveller@(b.NumberOfGuests == 1 ? "" : "s")
+                </p>
+                <span class="badge @badge">@b.Status</span>
+                <strong class="ms-2">@b.TotalPrice.ToString("N2")</strong>
+            </div>
+            <div>
+                <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@b.Id">View</a>
+            </div>
+        </div>
+    </div>
+}
