@@ -1,0 +1,54 @@
+﻿@model WebApplication1.ViewModels.ChatViewModel
+@{
+    var convo = Model.Conversation;
+    ViewData["Title"] = "Conversation";
+}
+
+<a asp-action="Index">&larr; Back to messages</a>
+
+<h4 class="mt-2 mb-0">@Model.OtherName</h4>
+<p class="text-muted">
+    About
+    @if (convo.Property != null && convo.Property.IsActive)
+    {
+        <a asp-controller="Properties" asp-action="Details" asp-route-id="@convo.PropertyId">@convo.Property.Title</a>
+    }
+    else
+    {
+        <span>@convo.Property?.Title</span>
+    }
+</p>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="border rounded p-3 mb-3" style="max-height:480px;overflow-y:auto;">
+    @foreach (var m in convo.Messages)
+    {
+        var mine = m.SenderId == Model.CurrentUserId;
+
+        <div class="d-flex @(mine ? "justify-content-end" : "justify-content-start") mb-2">
+            <div class="p-2 rounded @(mine ? "bg-primary text-white" : "bg-light border")" style="max-width:75%;">
+                <div style="white-space:pre-line">@m.Body</div>
+                <div class="small mt-1 @(mine ? "text-white-50" : "text-muted")">
+                    @m.SentAt.ToLocalTime().ToString("dd MMM HH:mm")
+                    @if (mine && m.ReadAt != null)
+                    {
+                        <span>- Read</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<form asp-action="Reply" asp-route-id="@convo.Id" method="post">
+    <div class="mb-2">
+        <textarea name="body" class="form-control" rows="3" maxlength="2000" placeholder="Write a reply..." required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Send</button>
+    <a asp-action="Chat" asp-route-id="@convo.Id" class="btn btn-outline-secondary">Refresh</a>
+    <span class="text-muted small ms-2">Messages aren't live. Refresh to see new replies.</span>
+</form>

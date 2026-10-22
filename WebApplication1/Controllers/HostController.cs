@@ -7,6 +7,7 @@ using WebApplication1.Models;
 using WebApplication1.Services;
 using WebApplication1.ViewModels;
 
+
 namespace WebApplication1.Controllers;
 
 [Authorize(Roles = Roles.Host)]
@@ -471,6 +472,7 @@ public class HostController : Controller
         TempData["Success"] = "Document rejected. The guest can upload a new one.";
         return RedirectToAction(nameof(Bookings));
     }
+
     // ---------- Helpers ----------
 
     // Only ever returns a property that belongs to the logged-in Host
@@ -488,6 +490,14 @@ public class HostController : Controller
         return await _db.GuestDocuments
             .Include(d => d.Booking).ThenInclude(b => b!.Property)
             .FirstOrDefaultAsync(d => d.Id == id && d.Booking!.Property!.HostId == userId);
+    }
+    // Only ever returns a booking on one of the logged-in Host's own properties
+    private async Task<Booking?> OwnedBooking(int id)
+    {
+        var userId = _userManager.GetUserId(User)!;
+        return await _db.Bookings
+            .Include(b => b.Property)
+            .FirstOrDefaultAsync(b => b.Id == id && b.Property!.HostId == userId);
     }
 
     private static string? DocumentReviewProblem(GuestDocument document)

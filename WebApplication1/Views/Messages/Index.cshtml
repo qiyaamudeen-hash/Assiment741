@@ -1,0 +1,34 @@
+﻿@model List<WebApplication1.ViewModels.InboxRow>
+@{
+    ViewData["Title"] = "Messages";
+}
+
+<h2 class="mb-3">Messages</h2>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">No conversations yet. Guests can message a host from any property page.</p>
+}
+
+<div class="list-group">
+    @foreach (var row in Model)
+    {
+        var preview = row.LastMessage ?? "";
+        if (preview.Length > 90) { preview = preview[..90] + "..."; }
+
+        <a asp-action="Chat" asp-route-id="@row.ConversationId"
+           class="list-group-item list-group-item-action @(row.Unread > 0 ? "fw-bold" : "")">
+            <div class="d-flex justify-content-between">
+                <span>@row.OtherName <span class="text-muted fw-normal">&middot; @row.PropertyTitle</span></span>
+                <small class="text-muted fw-normal">@row.LastMessageAt.ToLocalTime().ToString("dd MMM HH:mm")</small>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span class="text-truncate">@preview</span>
+                @if (row.Unread > 0)
+                {
+                    <span class="badge bg-danger ms-2">@row.Unread</span>
+                }
+            </div>
+        </a>
+    }
+</div>

@@ -130,6 +130,7 @@
                         <button type="submit" class="btn btn-primary w-100">Request to book</button>
                         <p class="text-muted small text-center mt-2 mb-0">You won't be charged yet. The host reviews your request first.</p>
                     </form>
+                    <a class="btn btn-outline-secondary w-100 mt-2" asp-controller="Messages" asp-action="Start" asp-route-propertyId="@p.Id">Message the host</a>
                 }
                 else if (User.Identity?.IsAuthenticated != true)
                 {

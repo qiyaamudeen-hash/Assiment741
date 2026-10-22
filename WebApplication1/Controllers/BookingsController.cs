@@ -269,6 +269,7 @@ public class BookingsController : Controller
             b.CheckInDate < checkOut &&
             b.CheckOutDate > checkIn);
 
+   
     // Only ever returns a booking that belongs to the logged-in guest
     private async Task<Booking?> OwnBooking(int id)
     {

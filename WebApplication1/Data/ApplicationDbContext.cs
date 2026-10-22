@@ -16,6 +16,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<CheckInProcess> CheckInProcesses => Set<CheckInProcess>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<GuestDocument> GuestDocuments => Set<GuestDocument>();
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<Message> Messages => Set<Message>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -51,5 +53,30 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(b => b.Guest).WithMany()
             .HasForeignKey(b => b.GuestId)
             .OnDelete(DeleteBehavior.Restrict);
+        // Messaging: keep history, and avoid SQL Server "multiple cascade paths" errors
+        builder.Entity<Conversation>()
+            .HasOne(c => c.Property).WithMany()
+            .HasForeignKey(c => c.PropertyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Conversation>()
+            .HasOne(c => c.Guest).WithMany()
+            .HasForeignKey(c => c.GuestId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Conversation>()
+            .HasOne(c => c.Host).WithMany()
+            .HasForeignKey(c => c.HostId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Message>()
+            .HasOne(m => m.Sender).WithMany()
+            .HasForeignKey(m => m.SenderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // One conversation per guest per property
+        builder.Entity<Conversation>()
+            .HasIndex(c => new { c.PropertyId, c.GuestId })
+            .IsUnique();
     }
 }

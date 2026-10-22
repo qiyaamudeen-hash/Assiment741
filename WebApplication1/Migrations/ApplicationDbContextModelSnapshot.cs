@@ -364,6 +364,43 @@ namespace WebApplication1.Migrations
                     b.ToTable("CheckInProcesses");
                 });
 
+            modelBuilder.Entity("WebApplication1.Models.Conversation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GuestId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("HostId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("LastMessageAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuestId");
+
+                    b.HasIndex("HostId");
+
+                    b.HasIndex("PropertyId", "GuestId")
+                        .IsUnique();
+
+                    b.ToTable("Conversations");
+                });
+
             modelBuilder.Entity("WebApplication1.Models.GuestDocument", b =>
                 {
                     b.Property<int>("Id")
@@ -499,6 +536,41 @@ namespace WebApplication1.Migrations
                     b.ToTable("HostProperties");
                 });
 
+            modelBuilder.Entity("WebApplication1.Models.Message", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("ConversationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("Messages");
+                });
+
             modelBuilder.Entity("WebApplication1.Models.PropertyImage", b =>
                 {
                     b.Property<int>("Id")
@@ -602,6 +674,33 @@ namespace WebApplication1.Migrations
                     b.Navigation("Property");
                 });
 
+            modelBuilder.Entity("WebApplication1.Models.Conversation", b =>
+                {
+                    b.HasOne("WebApplication1.Models.ApplicationUser", "Guest")
+                        .WithMany()
+                        .HasForeignKey("GuestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication1.Models.ApplicationUser", "Host")
+                        .WithMany()
+                        .HasForeignKey("HostId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication1.Models.HostProperty", "Property")
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Guest");
+
+                    b.Navigation("Host");
+
+                    b.Navigation("Property");
+                });
+
             modelBuilder.Entity("WebApplication1.Models.GuestDocument", b =>
                 {
                     b.HasOne("WebApplication1.Models.Booking", "Booking")
@@ -643,6 +742,25 @@ namespace WebApplication1.Migrations
                     b.Navigation("Host");
                 });
 
+            modelBuilder.Entity("WebApplication1.Models.Message", b =>
+                {
+                    b.HasOne("WebApplication1.Models.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication1.Models.ApplicationUser", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("WebApplication1.Models.PropertyImage", b =>
                 {
                     b.HasOne("WebApplication1.Models.HostProperty", "Property")
@@ -657,6 +775,11 @@ namespace WebApplication1.Migrations
             modelBuilder.Entity("WebApplication1.Models.Booking", b =>
                 {
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("WebApplication1.Models.Conversation", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("WebApplication1.Models.HostProperty", b =>
