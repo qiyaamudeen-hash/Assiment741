@@ -32,7 +32,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IActivityLogger, ActivityLogger>();
-builder.Services.AddScoped<IImageStorage, ImageStorage>();   // <-- add this
+builder.Services.AddScoped<IImageStorage, ImageStorage>();
+builder.Services.AddScoped<IDocumentStorage, DocumentStorage>();
 
 var app = builder.Build();
 
@@ -52,7 +53,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-app.UseAuthentication();   // must come BEFORE UseAuthorization
+app.UseAuthentication();   
 app.UseAuthorization();
 
 app.MapControllerRoute(

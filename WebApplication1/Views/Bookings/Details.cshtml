@@ -65,7 +65,11 @@
         }
         else if (Model.Status == BookingStatus.Approved)
         {
-            <div class="alert alert-success">Your booking is confirmed. The check-in steps will appear here in a later step.</div>
+            var checkInDone = CheckInStatus.IsComplete(Model, p.CheckInProcess);
+            <div class="alert @(checkInDone ? "alert-success" : "alert-info") d-flex justify-content-between align-items-center">
+                <span>@(checkInDone ? "Check-in complete. Your arrival details are ready." : "Your booking is confirmed. Complete your online check-in before you arrive.")</span>
+                <a class="btn btn-sm btn-primary" asp-action="CheckIn" asp-route-id="@Model.Id">@(checkInDone ? "View arrival details" : "Complete check-in")</a>
+            </div>
         }
     </div>
 

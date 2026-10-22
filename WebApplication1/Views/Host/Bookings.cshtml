@@ -74,25 +74,97 @@
 {
     <p class="text-muted">No approved stays coming up.</p>
 }
-else
+@foreach (var b in upcoming)
 {
-    <table class="table align-middle">
-        <thead>
-            <tr><th>Property</th><th>Guest</th><th>Dates</th><th>Travellers</th><th>Total</th></tr>
-        </thead>
-        <tbody>
-            @foreach (var b in upcoming)
+    var process = b.Property?.CheckInProcess;
+    var complete = CheckInStatus.IsComplete(b, process);
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h5 class="mb-1">@b.Property?.Title</h5>
+                    <p class="mb-1">Guest: <strong>@b.Guest?.FirstName @b.Guest?.LastName</strong> &middot; @b.NumberOfGuests traveller@(b.NumberOfGuests == 1 ? "" : "s")</p>
+                    <p class="mb-2 text-muted">
+                        @b.CheckInDate.ToString("dd MMM") &rarr; @b.CheckOutDate.ToString("dd MMM yyyy") &middot; Total @b.TotalPrice.ToString("N2")
+                    </p>
+                </div>
+                <div>
+                    @if (complete)
+                    {
+                        <span class="badge bg-success">Check-in complete</span>
+                    }
+                    else
+                    {
+
+                        <span class="badge bg-warning text-dark">Check-in in progress</span>
+                    }
+                </div>
+            </div>
+
+            <h6>Guest check-in</h6>
+            <p class="small mb-2">House rules: @(b.RulesAcceptedAt != null ? "accepted " + b.RulesAcceptedAt.Value.ToLocalTime().ToString("dd MMM HH:mm") : "not accepted yet")</p>
+
+            @foreach (var type in CheckInStatus.RequiredList(process))
             {
-                <tr>
-                    <td>@b.Property?.Title</td>
-                    <td>@b.Guest?.FirstName @b.Guest?.LastName</td>
-                    <td>@b.CheckInDate.ToString("dd MMM") &rarr; @b.CheckOutDate.ToString("dd MMM yyyy")</td>
-                    <td>@b.NumberOfGuests</td>
-                    <td>@b.TotalPrice.ToString("N2")</td>
-                </tr>
+                var doc = CheckInStatus.Latest(b, type);
+
+                <div class="border rounded p-2 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>@CheckInStatus.Name(type)</span>
+                        @if (doc == null)
+                        {
+                            <span class="badge bg-secondary">Not uploaded</span>
+                        }
+                        else if (doc.Status == DocumentStatus.Pending)
+                        {
+
+                            <span class="badge bg-warning text-dark">Needs your review</span>
+                        }
+                        else if (doc.Status == DocumentStatus.Verified)
+                        {
+
+                            <span class="badge bg-success">Verified</span>
+                        }
+                        else
+                        {
+
+                            <span class="badge bg-danger">Rejected, waiting for a new upload</span>
+                        }
+                    </div>
+
+                    @if (doc != null)
+                    {
+                        <div class="small mt-1">
+                            <a asp-controller="GuestDocuments" asp-action="Open" asp-route-id="@doc.Id" target="_blank">View document</a>
+                            <span class="text-muted">(@doc.OriginalFileName)</span>
+                        </div>
+
+                        @if (doc.Status == DocumentStatus.Pending)
+                        {
+                            <div class="row g-2 mt-1">
+                                <div class="col-auto">
+                                    <form asp-action="VerifyDocument" asp-route-id="@doc.Id" method="post">
+                                        <button type="submit" class="btn btn-sm btn-success">Verify</button>
+                                    </form>
+                                </div>
+                                <div class="col">
+                                    <form asp-action="RejectDocument" asp-route-id="@doc.Id" method="post" class="d-flex gap-1">
+                                        <input name="notes" class="form-control form-control-sm" maxlength="500" placeholder="Reason (required)" required />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                        else if (doc.Status == DocumentStatus.Rejected && !string.IsNullOrEmpty(doc.ReviewNote))
+                        {
+                            <div class="small text-muted mt-1">Your feedback: @doc.ReviewNote</div>
+                        }
+                    }
+                </div>
             }
-        </tbody>
-    </table>
+        </div>
+    </div>
 }
 
 <h4 class="mt-4">History</h4>

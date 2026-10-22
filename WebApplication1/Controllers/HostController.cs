@@ -345,7 +345,8 @@ public class HostController : Controller
 
         var bookings = await _db.Bookings
             .Include(b => b.Guest)
-            .Include(b => b.Property)
+            .Include(b => b.Documents)
+            .Include(b => b.Property).ThenInclude(p => p!.CheckInProcess)
             .Where(b => b.Property!.HostId == userId)
             .OrderBy(b => b.CheckInDate)
             .ToListAsync();
@@ -412,6 +413,63 @@ public class HostController : Controller
 
         TempData["Success"] = "Booking declined.";
         return RedirectToAction(nameof(Bookings));
+
+    }
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> VerifyDocument(int id)
+    {
+        var document = await OwnedDocument(id);
+        if (document == null) return NotFound();
+
+        var problem = DocumentReviewProblem(document);
+        if (problem != null)
+        {
+            TempData["Error"] = problem;
+            return RedirectToAction(nameof(Bookings));
+        }
+
+        document.Status = DocumentStatus.Verified;
+        document.ReviewedAt = DateTime.UtcNow;
+        document.ReviewNote = null;
+        await _db.SaveChangesAsync();
+
+        await _logger.LogAsync(_userManager.GetUserId(User), "GuestDocumentVerified",
+            $"{document.DocumentType} for booking #{document.BookingId}");
+
+        TempData["Success"] = "Document verified.";
+        return RedirectToAction(nameof(Bookings));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RejectDocument(int id, string? notes)
+    {
+        var document = await OwnedDocument(id);
+        if (document == null) return NotFound();
+
+        var problem = DocumentReviewProblem(document);
+        if (problem != null)
+        {
+            TempData["Error"] = problem;
+            return RedirectToAction(nameof(Bookings));
+        }
+
+        var note = CleanNote(notes);
+        if (note == null)
+        {
+            TempData["Error"] = "Please tell the guest what's wrong so they can upload a new one.";
+            return RedirectToAction(nameof(Bookings));
+        }
+
+        document.Status = DocumentStatus.Rejected;
+        document.ReviewedAt = DateTime.UtcNow;
+        document.ReviewNote = note;
+        await _db.SaveChangesAsync();
+
+        await _logger.LogAsync(_userManager.GetUserId(User), "GuestDocumentRejected",
+            $"{document.DocumentType} for booking #{document.BookingId}: {note}");
+
+        TempData["Success"] = "Document rejected. The guest can upload a new one.";
+        return RedirectToAction(nameof(Bookings));
     }
     // ---------- Helpers ----------
 
@@ -423,13 +481,22 @@ public class HostController : Controller
             .Include(p => p.Images)
             .FirstOrDefaultAsync(p => p.Id == id && p.HostId == userId);
     }
-    // Only ever returns a booking for one of the logged-in Host's own properties
-    private async Task<Booking?> OwnedBooking(int id)
+    // Only ever returns a document for a booking on one of the logged-in Host's own properties
+    private async Task<GuestDocument?> OwnedDocument(int id)
     {
         var userId = _userManager.GetUserId(User)!;
-        return await _db.Bookings
-            .Include(b => b.Property)
-            .FirstOrDefaultAsync(b => b.Id == id && b.Property!.HostId == userId);
+        return await _db.GuestDocuments
+            .Include(d => d.Booking).ThenInclude(b => b!.Property)
+            .FirstOrDefaultAsync(d => d.Id == id && d.Booking!.Property!.HostId == userId);
+    }
+
+    private static string? DocumentReviewProblem(GuestDocument document)
+    {
+        if (document.Booking!.Status != BookingStatus.Approved)
+            return "This booking is no longer active.";
+        if (document.Status != DocumentStatus.Pending)
+            return "This document has already been reviewed.";
+        return null;
     }
 
     private static string? CleanNote(string? notes)

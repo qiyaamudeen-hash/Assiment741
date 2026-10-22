@@ -1,0 +1,176 @@
+﻿@model WebApplication1.Models.Booking
+@{
+    ViewData["Title"] = "Check-in";
+
+    var p = Model.Property!;
+    var process = p.CheckInProcess;
+    var required = CheckInStatus.RequiredList(process);
+    var rulesDone = Model.RulesAcceptedAt != null;
+    var complete = CheckInStatus.IsComplete(Model, process);
+}
+
+<a asp-action="Details" asp-route-id="@Model.Id">&larr; Back to booking</a>
+<h2 class="mt-2 mb-1">Online check-in</h2>
+<p class="text-muted">@p.Title &middot; @Model.CheckInDate.ToString("dd MMM") &rarr; @Model.CheckOutDate.ToString("dd MMM yyyy")</p>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (complete)
+{
+    <div class="alert alert-success">You're all set! Your arrival details are unlocked below.</div>
+}
+
+<div class="row">
+    <div class="col-lg-8">
+
+        <!-- Step 1 -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between">
+                <strong>Step 1: House rules</strong>
+                @if (rulesDone)
+                {
+                    <span class="badge bg-success">Done</span>
+                }
+                else
+                {
+
+                    <span class="badge bg-warning text-dark">To do</span>
+                }
+            </div>
+            <div class="card-body">
+                @if (process != null)
+                {
+                    <p class="mb-2">Check-in from <strong>@process.CheckInTime.ToString("HH:mm")</strong>, check-out by <strong>@process.CheckOutTime.ToString("HH:mm")</strong></p>
+                    <p style="white-space:pre-line">@process.HouseRules</p>
+                }
+                else
+                {
+                    <p>Your host hasn't added specific rules. Please respect the property and its neighbours.</p>
+                }
+
+                @if (!rulesDone)
+                {
+                    <form asp-action="AcceptRules" asp-route-id="@Model.Id" method="post">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="agree" required />
+                            <label class="form-check-label" for="agree">I have read and agree to the house rules</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Accept house rules</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Accepted on @Model.RulesAcceptedAt!.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+                }
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="card mb-3">
+            <div class="card-header"><strong>Step 2: Your documents</strong></div>
+            <div class="card-body">
+                @if (!rulesDone)
+                {
+                    <p class="text-muted mb-0">Accept the house rules in step 1 to unlock document uploads.</p>
+                }
+                else
+                {
+                    <p class="text-muted small">PDF, JPG or PNG, up to 5 MB. Your documents are private: only you and your host can see them.</p>
+
+                    @foreach (var type in required)
+                    {
+                        var doc = CheckInStatus.Latest(Model, type);
+
+                        <div class="border rounded p-3 mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>@CheckInStatus.Name(type)</strong>
+                                @if (doc == null)
+                                {
+                                    <span class="badge bg-secondary">Not uploaded</span>
+                                }
+                                else if (doc.Status == DocumentStatus.Pending)
+                                {
+
+                                    <span class="badge bg-warning text-dark">Under review</span>
+                                }
+                                else if (doc.Status == DocumentStatus.Verified)
+                                {
+
+                                    <span class="badge bg-success">Verified</span>
+                                }
+                                else
+                                {
+
+                                    <span class="badge bg-danger">Rejected</span>
+                                }
+                            </div>
+
+                            @if (doc != null)
+                            {
+                                <div class="small text-muted mt-1">
+                                    @doc.OriginalFileName &middot; uploaded @doc.UploadedAt.ToLocalTime().ToString("dd MMM HH:mm")
+                                    &middot; <a asp-controller="GuestDocuments" asp-action="Open" asp-route-id="@doc.Id" target="_blank">View</a>
+                                </div>
+                                @if (doc.Status == DocumentStatus.Rejected && !string.IsNullOrEmpty(doc.ReviewNote))
+                                {
+                                    <div class="small text-danger mt-1">Host feedback: @doc.ReviewNote</div>
+                                }
+                            }
+
+                            @if (doc == null || doc.Status == DocumentStatus.Rejected)
+                            {
+                                <form asp-action="UploadDocument" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="mt-2">
+                                    <input type="hidden" name="type" value="@((int)type)" />
+                                    <div class="input-group input-group-sm">
+                                        <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required />
+                                        <button type="submit" class="btn btn-primary">Upload</button>
+                                    </div>
+                                </form>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between">
+                <strong>Step 3: Arrival details</strong>
+                @if (complete)
+                {
+                    <span class="badge bg-success">Unlocked</span>
+                }
+                else
+                {
+
+                    <span class="badge bg-secondary">Locked</span>
+                }
+            </div>
+            <div class="card-body">
+                @if (complete)
+                {
+                    <p class="mb-1"><strong>Address:</strong> @p.Address, @p.City</p>
+                    @if (!string.IsNullOrWhiteSpace(process?.CheckInInstructions))
+                    {
+                        <p class="mb-0" style="white-space:pre-line"><strong>Check-in instructions:</strong><br />@process!.CheckInInstructions</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Your host hasn't added extra instructions. Contact them if you need help.</p>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Unlocks once you've accepted the house rules and your host has verified all your documents.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -18,14 +18,17 @@ public class BookingsController : Controller
     private readonly ApplicationDbContext _db;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IActivityLogger _logger;
+    private readonly IDocumentStorage _documents;
 
     public BookingsController(ApplicationDbContext db,
         UserManager<ApplicationUser> userManager,
-        IActivityLogger logger)
+        IActivityLogger logger,
+        IDocumentStorage documents)
     {
         _db = db;
         _userManager = userManager;
         _logger = logger;
+        _documents = documents;
     }
 
     // ---------- My bookings ----------
@@ -154,7 +157,86 @@ public class BookingsController : Controller
         TempData["Success"] = "Your booking has been cancelled.";
         return RedirectToAction(nameof(Details), new { id });
     }
+    // ---------- Check-in ----------
 
+    public async Task<IActionResult> CheckIn(int id)
+    {
+        var booking = await OwnBooking(id);
+        if (booking == null) return NotFound();
+
+        if (booking.Status != BookingStatus.Approved)
+        {
+            TempData["Error"] = "Check-in opens once the host approves your booking.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        return View(booking);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AcceptRules(int id)
+    {
+        var booking = await OwnBooking(id);
+        if (booking == null) return NotFound();
+
+        if (booking.Status != BookingStatus.Approved)
+            return CheckInError(id, "Check-in opens once the host approves your booking.");
+
+        if (booking.RulesAcceptedAt == null)
+        {
+            booking.RulesAcceptedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            await _logger.LogAsync(booking.GuestId, "HouseRulesAccepted",
+                $"Booking #{booking.Id} for '{booking.Property!.Title}'");
+        }
+
+        TempData["Success"] = "House rules accepted. You can now upload your documents.";
+        return RedirectToAction(nameof(CheckIn), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadDocument(int id, RequiredDocument type, IFormFile? file)
+    {
+        var booking = await OwnBooking(id);
+        if (booking == null) return NotFound();
+
+        if (booking.Status != BookingStatus.Approved)
+            return CheckInError(id, "Check-in opens once the host approves your booking.");
+
+        // Steps happen in order: rules first, then documents
+        if (booking.RulesAcceptedAt == null)
+            return CheckInError(id, "Please accept the house rules first (step 1).");
+
+        var required = CheckInStatus.RequiredList(booking.Property!.CheckInProcess);
+        if (!required.Contains(type))
+            return CheckInError(id, "That document isn't required for this stay.");
+
+        // One live document per type; a new upload is only allowed after a rejection
+        var latest = CheckInStatus.Latest(booking, type);
+        if (latest != null && latest.Status != DocumentStatus.Rejected)
+            return CheckInError(id, "You've already submitted this document.");
+
+        var error = _documents.Validate(file);
+        if (error != null) return CheckInError(id, error);
+
+        var storedName = await _documents.SaveAsync(file!);
+        var originalName = Path.GetFileName(file!.FileName);
+
+        booking.Documents.Add(new GuestDocument
+        {
+            DocumentType = type,
+            StoredFileName = storedName,
+            OriginalFileName = originalName.Length > 200 ? originalName[..200] : originalName
+        });
+        await _db.SaveChangesAsync();
+
+        await _logger.LogAsync(booking.GuestId, "GuestDocumentUploaded",
+            $"{type} uploaded for booking #{booking.Id}");
+
+        TempData["Success"] = "Document uploaded. Your host will review it soon.";
+        return RedirectToAction(nameof(CheckIn), new { id });
+    }
     // ---------- Helpers ----------
 
     private string? ValidateStay(DateOnly? checkIn, DateOnly? checkOut, int travelers)
@@ -192,7 +274,16 @@ public class BookingsController : Controller
     {
         var guestId = _userManager.GetUserId(User)!;
         return await _db.Bookings
+            .Include(b => b.Documents)
             .Include(b => b.Property).ThenInclude(p => p!.Images)
+            .Include(b => b.Property).ThenInclude(p => p!.CheckInProcess)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(b => b.Id == id && b.GuestId == guestId);
+    }
+
+    private IActionResult CheckInError(int id, string message)
+    {
+        TempData["Error"] = message;
+        return RedirectToAction(nameof(CheckIn), new { id });
     }
 }
