@@ -7,7 +7,7 @@ public class CheckInProcessViewModel
 {
     public int PropertyId { get; set; }
 
-    // Display only, not posted back, so it must be excluded from validation
+  
     [ValidateNever]
     public string PropertyTitle { get; set; } = string.Empty;
 

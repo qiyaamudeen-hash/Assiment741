@@ -10,7 +10,7 @@ public class Conversation
     public string GuestId { get; set; } = string.Empty;
     public ApplicationUser? Guest { get; set; }
 
-    // Copied from the property's Host when the conversation starts
+    
     public string HostId { get; set; } = string.Empty;
     public ApplicationUser? Host { get; set; }
 

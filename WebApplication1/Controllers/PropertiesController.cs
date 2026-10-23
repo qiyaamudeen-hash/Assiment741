@@ -7,7 +7,7 @@ using WebApplication1.ViewModels;
 
 namespace WebApplication1.Controllers;
 
-// No [Authorize] on purpose: browsing is public. Booking (Phase 4B) will be Guest-only.
+
 public class PropertiesController : Controller
 {
     private const int PageSize = 12;
@@ -25,8 +25,7 @@ public class PropertiesController : Controller
     {
         if (page < 1) page = 1;
 
-        // IsActive can only become true after an admin approves the listing,
-        // and a Host can switch it off at any time.
+    
         var query = _db.HostProperties.Where(p => p.IsActive);
 
         if (!string.IsNullOrWhiteSpace(city))
@@ -84,7 +83,7 @@ public class PropertiesController : Controller
 
         if (property == null) return NotFound();
 
-        // Hidden listings are only visible to the Host who owns them (as a preview)
+ 
         var userId = _userManager.GetUserId(User);
         var isOwner = userId != null && property.HostId == userId;
         if (!property.IsActive && !isOwner) return NotFound();

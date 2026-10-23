@@ -17,7 +17,7 @@ public class Booking
     public DateOnly CheckOutDate { get; set; }
     public int NumberOfGuests { get; set; }
 
-    // Price snapshot taken at booking time
+  
     [Column(TypeName = "decimal(18,2)")]
     public decimal NightlyRate { get; set; }
 
@@ -33,13 +33,13 @@ public class Booking
     public BookingStatus Status { get; set; } = BookingStatus.Pending;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? DecidedAt { get; set; }          // used by the Host in 4C
+    public DateTime? DecidedAt { get; set; }          
 
     [StringLength(500)]
-    public string? HostNotes { get; set; }            // used by the Host in 4C
+    public string? HostNotes { get; set; }            
     public DateTime? RulesAcceptedAt { get; set; }
     public List<GuestDocument> Documents { get; set; } = new();
 
-    // Calculated, not stored (no setter, so EF ignores it)
+
     public int Nights => CheckOutDate.DayNumber - CheckInDate.DayNumber;
 }

@@ -31,7 +31,7 @@ public class BookingsController : Controller
         _documents = documents;
     }
 
-    // ---------- My bookings ----------
+
 
     public async Task<IActionResult> Index()
     {
@@ -54,7 +54,7 @@ public class BookingsController : Controller
         return View(booking);
     }
 
-    // ---------- Live price quote (called by the booking form's JavaScript) ----------
+  
 
     [HttpGet]
     public async Task<IActionResult> Quote(int propertyId, DateOnly? checkIn, DateOnly? checkOut)
@@ -72,7 +72,7 @@ public class BookingsController : Controller
         return Json(BookingPricing.Calculate(property.PricePerNight, property.CleaningFee, nights));
     }
 
-    // ---------- Request a booking ----------
+
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(int propertyId, DateOnly? checkIn, DateOnly? checkOut, int travelers)
@@ -80,7 +80,7 @@ public class BookingsController : Controller
         var property = await _db.HostProperties.FirstOrDefaultAsync(p => p.Id == propertyId && p.IsActive);
         if (property == null) return NotFound();
 
-        // Send the guest back to the property page with what they typed still filled in
+  
         IActionResult Back(string message)
         {
             TempData["BookingError"] = message;
@@ -98,10 +98,10 @@ public class BookingsController : Controller
 
         var nights = checkOut!.Value.DayNumber - checkIn!.Value.DayNumber;
 
-        // Never trust prices from the browser: always recalculate here
+       
         var price = BookingPricing.Calculate(property.PricePerNight, property.CleaningFee, nights);
 
-        // Serializable stops two guests grabbing the same dates at the same moment
+
         await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
 
         if (await HasOverlap(propertyId, checkIn.Value, checkOut.Value))
@@ -132,8 +132,7 @@ public class BookingsController : Controller
         return RedirectToAction(nameof(Details), new { id = booking.Id });
     }
 
-    // ---------- Cancel ----------
-
+   
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancel(int id)
     {
@@ -157,8 +156,7 @@ public class BookingsController : Controller
         TempData["Success"] = "Your booking has been cancelled.";
         return RedirectToAction(nameof(Details), new { id });
     }
-    // ---------- Check-in ----------
-
+ 
     public async Task<IActionResult> CheckIn(int id)
     {
         var booking = await OwnBooking(id);
@@ -204,7 +202,6 @@ public class BookingsController : Controller
         if (booking.Status != BookingStatus.Approved)
             return CheckInError(id, "Check-in opens once the host approves your booking.");
 
-        // Steps happen in order: rules first, then documents
         if (booking.RulesAcceptedAt == null)
             return CheckInError(id, "Please accept the house rules first (step 1).");
 
@@ -212,7 +209,7 @@ public class BookingsController : Controller
         if (!required.Contains(type))
             return CheckInError(id, "That document isn't required for this stay.");
 
-        // One live document per type; a new upload is only allowed after a rejection
+
         var latest = CheckInStatus.Latest(booking, type);
         if (latest != null && latest.Status != DocumentStatus.Rejected)
             return CheckInError(id, "You've already submitted this document.");
@@ -237,7 +234,6 @@ public class BookingsController : Controller
         TempData["Success"] = "Document uploaded. Your host will review it soon.";
         return RedirectToAction(nameof(CheckIn), new { id });
     }
-    // ---------- Helpers ----------
 
     private string? ValidateStay(DateOnly? checkIn, DateOnly? checkOut, int travelers)
     {
@@ -260,8 +256,6 @@ public class BookingsController : Controller
         return null;
     }
 
-    // Pending and approved bookings both hold the dates.
-    // Strict < and > mean a check-out day can be the next guest's check-in day.
     private Task<bool> HasOverlap(int propertyId, DateOnly checkIn, DateOnly checkOut) =>
         _db.Bookings.AnyAsync(b =>
             b.PropertyId == propertyId &&
@@ -269,8 +263,7 @@ public class BookingsController : Controller
             b.CheckInDate < checkOut &&
             b.CheckOutDate > checkIn);
 
-   
-    // Only ever returns a booking that belongs to the logged-in guest
+
     private async Task<Booking?> OwnBooking(int id)
     {
         var guestId = _userManager.GetUserId(User)!;

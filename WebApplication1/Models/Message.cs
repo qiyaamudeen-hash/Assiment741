@@ -17,6 +17,5 @@ public class Message
 
     public DateTime SentAt { get; set; } = DateTime.UtcNow;
 
-    // Set when the other person opens the conversation; null means unread
     public DateTime? ReadAt { get; set; }
 }

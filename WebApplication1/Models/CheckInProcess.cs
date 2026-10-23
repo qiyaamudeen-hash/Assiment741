@@ -15,7 +15,7 @@ public class CheckInProcess
     [Required, StringLength(2000)]
     public string HouseRules { get; set; } = string.Empty;
 
-    // Private: only revealed to a guest once their documents are verified
+  
     [StringLength(2000)]
     public string? CheckInInstructions { get; set; }
 

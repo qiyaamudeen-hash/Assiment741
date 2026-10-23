@@ -21,7 +21,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        base.OnModelCreating(builder);   // keep this first: it sets up the Identity tables
+        base.OnModelCreating(builder); 
 
         builder.Entity<HostProperty>()
             .HasOne(p => p.Host).WithMany()
@@ -38,12 +38,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(a => a.PropertyId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // One check-in setup per property
+        
         builder.Entity<CheckInProcess>()
             .HasOne(c => c.Property).WithOne(p => p.CheckInProcess)
             .HasForeignKey<CheckInProcess>(c => c.PropertyId)
             .OnDelete(DeleteBehavior.Cascade);
-        // Keep booking history even if a user or property is removed
+    
         builder.Entity<Booking>()
             .HasOne(b => b.Property).WithMany()
             .HasForeignKey(b => b.PropertyId)
@@ -53,7 +53,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(b => b.Guest).WithMany()
             .HasForeignKey(b => b.GuestId)
             .OnDelete(DeleteBehavior.Restrict);
-        // Messaging: keep history, and avoid SQL Server "multiple cascade paths" errors
+        
         builder.Entity<Conversation>()
             .HasOne(c => c.Property).WithMany()
             .HasForeignKey(c => c.PropertyId)
@@ -74,7 +74,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(m => m.SenderId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // One conversation per guest per property
+        
         builder.Entity<Conversation>()
             .HasIndex(c => new { c.PropertyId, c.GuestId })
             .IsUnique();

@@ -45,8 +45,7 @@ public class UserManagementController : Controller
     public Task<IActionResult> DemoteToGuest(string id) =>
         ChangeRole(id, fromRole: Roles.Admin, toRole: Roles.Guest);
 
-    // Swaps one role for another: add the new role first, then remove the old one,
-    // and roll back if the second step fails so nobody is left with two roles.
+
     private async Task<IActionResult> ChangeRole(string id, string fromRole, string toRole)
     {
         var user = await _userManager.FindByIdAsync(id);
@@ -70,7 +69,7 @@ public class UserManagementController : Controller
         var removed = await _userManager.RemoveFromRoleAsync(user, fromRole);
         if (!removed.Succeeded)
         {
-            if (addedHere) await _userManager.RemoveFromRoleAsync(user, toRole);   // roll back
+            if (addedHere) await _userManager.RemoveFromRoleAsync(user, toRole);
             return Fail($"Could not remove the {fromRole} role: " + string.Join(", ", removed.Errors.Select(e => e.Description)));
         }
 

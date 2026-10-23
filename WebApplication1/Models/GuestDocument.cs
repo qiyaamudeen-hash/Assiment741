@@ -9,10 +9,10 @@ public class GuestDocument
     public int BookingId { get; set; }
     public Booking? Booking { get; set; }
 
-    // One of IdOrPassport, ProofOfAddress or DriversLicense (a single value per upload)
+
     public RequiredDocument DocumentType { get; set; }
 
-    // Name of the file on disk (a random GUID), never the guest's original name
+   
     [Required]
     public string StoredFileName { get; set; } = string.Empty;
 

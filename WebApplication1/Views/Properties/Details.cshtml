@@ -89,7 +89,7 @@
         {
             <p class="text-muted">You'll be asked for a Government ID or Passport before arrival.</p>
         }
-        @* CheckInInstructions are private and are deliberately never shown on this page. *@
+        
     </div>
 
     <div class="col-md-4">
@@ -152,7 +152,7 @@
             const checkIn = document.getElementById('checkIn');
             const checkOut = document.getElementById('checkOut');
             const box = document.getElementById('quote');
-            if (!checkIn || !checkOut || !box) return;   // only Guests see the booking form
+            if (!checkIn || !checkOut || !box) return;   
 
             const money = n => Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -192,11 +192,11 @@
             }
 
             checkIn.addEventListener('change', function () {
-                checkOut.min = checkIn.value || checkOut.min;   // check-out can't be before check-in
+                checkOut.min = checkIn.value || checkOut.min;   
                 updateQuote();
             });
             checkOut.addEventListener('change', updateQuote);
-            updateQuote();   // handles the pre-filled case after a validation error
+            updateQuote();   
         })();
     </script>
 }

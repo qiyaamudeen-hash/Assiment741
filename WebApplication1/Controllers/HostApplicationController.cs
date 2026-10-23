@@ -45,7 +45,6 @@ public class HostApplicationController : Controller
         if (await HasPendingApplication(userId))
             return RedirectToAction(nameof(Status));
 
-        // An application without at least one image cannot be submitted
         var files = model.Images.Where(f => f.Length > 0).ToList();
         if (files.Count == 0)
         {
@@ -72,7 +71,7 @@ public class HostApplicationController : Controller
             PricePerNight = model.PricePerNight,
             CleaningFee = model.CleaningFee,
             HostId = userId,
-            IsActive = false,   // stays hidden until an admin approves
+            IsActive = false,
             Images = urls.Select(u => new PropertyImage { ImageUrl = u }).ToList()
         };
 

@@ -31,7 +31,6 @@ public class GuestDocumentsController : Controller
     {
         var userId = _userManager.GetUserId(User)!;
 
-        // The guest who uploaded it, or the host of that property. Nobody else, not even admins.
         var document = await _db.GuestDocuments
             .Include(d => d.Booking).ThenInclude(b => b!.Property)
             .FirstOrDefaultAsync(d => d.Id == id &&
@@ -42,14 +41,13 @@ public class GuestDocumentsController : Controller
         var path = _storage.GetPath(document.StoredFileName);
         if (path == null) return NotFound();
 
-        // Leave a trail whenever someone other than the owner looks at an ID document
+       
         if (document.Booking!.GuestId != userId)
         {
             await _logger.LogAsync(userId, "GuestDocumentViewed",
                 $"{document.DocumentType} for booking #{document.BookingId}");
         }
 
-        // The content type comes from our own stored extension, never from the guest
         var contentType = Path.GetExtension(path).ToLowerInvariant() switch
         {
             ".pdf" => "application/pdf",

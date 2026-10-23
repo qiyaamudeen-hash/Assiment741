@@ -37,7 +37,7 @@ builder.Services.AddScoped<IDocumentStorage, DocumentStorage>();
 
 var app = builder.Build();
 
-// Seed roles + SuperAdmin on startup
+
 using (var scope = app.Services.CreateScope())
 {
     await RoleSeeder.SeedAsync(scope.ServiceProvider);

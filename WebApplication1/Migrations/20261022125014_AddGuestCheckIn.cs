@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace WebApplication1.Migrations
 {
-    /// <inheritdoc />
+   
     public partial class AddGuestCheckIn : Migration
     {
-        /// <inheritdoc />
+   
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<DateTime>(
@@ -49,7 +49,6 @@ namespace WebApplication1.Migrations
                 column: "BookingId");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

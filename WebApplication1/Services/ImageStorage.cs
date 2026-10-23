@@ -10,7 +10,7 @@ public interface IImageStorage
 public class ImageStorage : IImageStorage
 {
     private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
-    private const long MaxBytes = 5 * 1024 * 1024; // 5 MB
+    private const long MaxBytes = 5 * 1024 * 1024; 
 
     private readonly IWebHostEnvironment _env;
 
@@ -20,12 +20,12 @@ public class ImageStorage : IImageStorage
     }
     public void DeletePropertyImage(string imageUrl)
     {
-        // GetFileName strips any folder parts, so a bad URL can't point outside the uploads folder
+        
         var fileName = Path.GetFileName(imageUrl);
         var path = Path.Combine(_env.WebRootPath, "uploads", "properties", fileName);
         if (File.Exists(path)) File.Delete(path);
     }
-    // Returns an error message, or null if every file is OK
+   
     public string? Validate(IEnumerable<IFormFile> files)
     {
         foreach (var file in files)
@@ -50,7 +50,7 @@ public class ImageStorage : IImageStorage
         foreach (var file in files)
         {
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-            var fileName = $"{Guid.NewGuid()}{ext}";   // never trust the user's file name
+            var fileName = $"{Guid.NewGuid()}{ext}";   
 
             using var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create);
             await file.CopyToAsync(stream);

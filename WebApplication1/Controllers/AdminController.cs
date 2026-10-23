@@ -25,7 +25,7 @@ public class AdminController : Controller
         _logger = logger;
     }
 
-    // Dashboard: counts + pending queue
+
     public async Task<IActionResult> Index()
     {
         var model = new AdminDashboardViewModel
@@ -44,7 +44,7 @@ public class AdminController : Controller
         return View(model);
     }
 
-    // Full detail of one application
+
     [HttpGet]
     public async Task<IActionResult> Review(int id)
     {
@@ -71,7 +71,7 @@ public class AdminController : Controller
 
         var becameHost = false;
 
-        // 1. Add the Host role (skipped if they are already a Host adding another property)
+ 
         if (!await _userManager.IsInRoleAsync(applicant, Roles.Host))
         {
             var added = await _userManager.AddToRoleAsync(applicant, Roles.Host);
@@ -83,13 +83,13 @@ public class AdminController : Controller
             becameHost = true;
         }
 
-        // 2. Remove the Guest role (a user is a Guest OR a Host, never both)
+
         if (await _userManager.IsInRoleAsync(applicant, Roles.Guest))
         {
             var removed = await _userManager.RemoveFromRoleAsync(applicant, Roles.Guest);
             if (!removed.Succeeded)
             {
-                if (becameHost) await _userManager.RemoveFromRoleAsync(applicant, Roles.Host);   // roll back step 1
+                if (becameHost) await _userManager.RemoveFromRoleAsync(applicant, Roles.Host);  
                 TempData["Error"] = "Could not remove the Guest role: " + string.Join(", ", removed.Errors.Select(e => e.Description));
                 return RedirectToAction(nameof(Review), new { id });
             }
@@ -167,7 +167,6 @@ public class AdminController : Controller
             .Take(pageSize)
             .ToListAsync();
 
-        // The log only stores user IDs, so look up the emails for this page of rows
         var userIds = logs.Where(l => l.UserId != null).Select(l => l.UserId!).Distinct().ToList();
         var emails = await _db.Users
             .Where(u => userIds.Contains(u.Id))

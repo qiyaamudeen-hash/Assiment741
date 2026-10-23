@@ -25,7 +25,6 @@ public class StartMessageViewModel
 {
     public int PropertyId { get; set; }
 
-    // Display only, not posted back
     [ValidateNever]
     public string PropertyTitle { get; set; } = string.Empty;
 

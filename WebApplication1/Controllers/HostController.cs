@@ -31,7 +31,7 @@ public class HostController : Controller
         _logger = logger;
     }
 
-    // ---------- Dashboard ----------
+    =
 
     public async Task<IActionResult> Index()
     {
@@ -76,7 +76,7 @@ public class HostController : Controller
         return View(rows);
     }
 
-    // ---------- Activate / deactivate ----------
+=
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleActive(int id)
@@ -102,7 +102,7 @@ public class HostController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // ---------- Add another property (goes through admin approval) ----------
+=
 
     [HttpGet]
     public IActionResult NewListing() => View(new BecomeHostViewModel());
@@ -162,7 +162,6 @@ public class HostController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // ---------- Edit details ----------
 
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
@@ -201,7 +200,7 @@ public class HostController : Controller
         return RedirectToAction(nameof(Edit), new { id });
     }
 
-    // ---------- Photos ----------
+   
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AddPhotos(int id, List<IFormFile> newPhotos)
@@ -267,7 +266,7 @@ public class HostController : Controller
         TempData["Success"] = "Photo deleted.";
         return RedirectToAction(nameof(Edit), new { id });
     }
-    // ---------- Check-in settings ----------
+
 
     [HttpGet]
     public async Task<IActionResult> CheckIn(int id)
@@ -323,7 +322,6 @@ public class HostController : Controller
             ? null
             : model.CheckInInstructions.Trim();
 
-        // ID or Passport is always required; the Host can add more
         var documents = RequiredDocument.IdOrPassport;
         if (model.RequireProofOfAddress) documents |= RequiredDocument.ProofOfAddress;
         if (model.RequireDriversLicense) documents |= RequiredDocument.DriversLicense;
@@ -338,8 +336,7 @@ public class HostController : Controller
         TempData["Success"] = "Check-in settings saved.";
         return RedirectToAction(nameof(CheckIn), new { id });
     }
-    // ---------- Booking requests ----------
-
+    
     public async Task<IActionResult> Bookings()
     {
         var userId = _userManager.GetUserId(User)!;
@@ -473,9 +470,6 @@ public class HostController : Controller
         return RedirectToAction(nameof(Bookings));
     }
 
-    // ---------- Helpers ----------
-
-    // Only ever returns a property that belongs to the logged-in Host
     private async Task<HostProperty?> OwnedProperty(int id)
     {
         var userId = _userManager.GetUserId(User)!;
@@ -483,7 +477,7 @@ public class HostController : Controller
             .Include(p => p.Images)
             .FirstOrDefaultAsync(p => p.Id == id && p.HostId == userId);
     }
-    // Only ever returns a document for a booking on one of the logged-in Host's own properties
+  
     private async Task<GuestDocument?> OwnedDocument(int id)
     {
         var userId = _userManager.GetUserId(User)!;
@@ -491,7 +485,7 @@ public class HostController : Controller
             .Include(d => d.Booking).ThenInclude(b => b!.Property)
             .FirstOrDefaultAsync(d => d.Id == id && d.Booking!.Property!.HostId == userId);
     }
-    // Only ever returns a booking on one of the logged-in Host's own properties
+ 
     private async Task<Booking?> OwnedBooking(int id)
     {
         var userId = _userManager.GetUserId(User)!;

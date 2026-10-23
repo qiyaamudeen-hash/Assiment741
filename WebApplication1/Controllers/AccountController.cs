@@ -46,7 +46,7 @@ public class AccountController : Controller
             return View(model);
         }
 
-        // Every new registrant starts as a Guest
+
         await _userManager.AddToRoleAsync(user, Roles.Guest);
         await _logger.LogAsync(user.Id, "Register", $"New user {user.Email} registered as Guest");
 
@@ -80,7 +80,6 @@ public class AccountController : Controller
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     return Redirect(returnUrl);
 
-                // Send each role to its own dashboard
                 if (await _userManager.IsInRoleAsync(user, Roles.Admin) ||
                     await _userManager.IsInRoleAsync(user, Roles.SuperAdmin))
                     return RedirectToAction("Index", "Admin");
@@ -105,7 +104,7 @@ public class AccountController : Controller
             await _logger.LogAsync(null, "LoginFailed", $"Unknown email: {model.Email}");
         }
 
-        // Same message either way so attackers can't tell which emails exist
+
         ModelState.AddModelError(string.Empty, "Invalid email or password.");
         return View(model);
     }

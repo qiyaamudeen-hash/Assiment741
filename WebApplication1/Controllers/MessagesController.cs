@@ -9,7 +9,7 @@ using WebApplication1.ViewModels;
 
 namespace WebApplication1.Controllers;
 
-// Guests and Hosts only. Admins deliberately can't read private messages.
+
 [Authorize(Roles = Roles.Guest + "," + Roles.Host)]
 public class MessagesController : Controller
 {
@@ -26,7 +26,7 @@ public class MessagesController : Controller
         _logger = logger;
     }
 
-    // ---------- Inbox ----------
+
 
     public async Task<IActionResult> Index()
     {
@@ -51,7 +51,7 @@ public class MessagesController : Controller
         return View(rows);
     }
 
-    // ---------- One conversation ----------
+
 
     public async Task<IActionResult> Chat(int id)
     {
@@ -66,7 +66,7 @@ public class MessagesController : Controller
 
         if (conversation == null) return NotFound();
 
-        // Opening the conversation marks the other person's messages as read
+       
         var now = DateTime.UtcNow;
         var changed = false;
         foreach (var message in conversation.Messages.Where(m => m.ReadAt == null && m.SenderId != userId))
@@ -114,7 +114,6 @@ public class MessagesController : Controller
         return RedirectToAction(nameof(Chat), new { id });
     }
 
-    // ---------- Guest starts a conversation about a property ----------
 
     [Authorize(Roles = Roles.Guest)]
     [HttpGet]
@@ -125,7 +124,7 @@ public class MessagesController : Controller
         var property = await FindMessageableProperty(propertyId, guestId);
         if (property == null) return NotFound();
 
-        // Already talking? Go straight to that conversation
+       
         var existing = await _db.Conversations
             .FirstOrDefaultAsync(c => c.PropertyId == propertyId && c.GuestId == guestId);
         if (existing != null)
@@ -183,9 +182,7 @@ public class MessagesController : Controller
         return RedirectToAction(nameof(Chat), new { id = conversation.Id });
     }
 
-    // ---------- Helpers ----------
-
-    // A guest can message about an active listing, or about one they have booked
+=
     private async Task<HostProperty?> FindMessageableProperty(int propertyId, string guestId)
     {
         var property = await _db.HostProperties

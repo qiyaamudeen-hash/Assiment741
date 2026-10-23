@@ -31,7 +31,7 @@ public class EditPropertyViewModel
     [Display(Name = "Cleaning fee")]
     public decimal CleaningFee { get; set; }
 
-    // For display only, never posted back
+
     [ValidateNever]
     public List<PropertyImage> Images { get; set; } = new();
 }
